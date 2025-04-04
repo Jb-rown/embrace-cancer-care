@@ -14,6 +14,7 @@ import SymptomTracker from "./pages/SymptomTracker";
 import Resources from "./pages/Resources";
 import NotFound from "./pages/NotFound";
 import Treatments from "./pages/Treatments";
+import Quiz from "./pages/Quiz";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,11 @@ const App = () => (
             <Route path="/treatments" element={
               <ProtectedRoute>
                 <Treatments />
+              </ProtectedRoute>
+            } />
+            <Route path="/quiz" element={
+              <ProtectedRoute>
+                <Quiz />
               </ProtectedRoute>
             } />
             <Route path="/resources" element={<Resources />} />
