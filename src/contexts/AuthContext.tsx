@@ -20,7 +20,7 @@ interface AuthContextType {
 }
 
 // Create the context
-const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 // Custom hook to use the auth context
 export const useAuth = () => {
