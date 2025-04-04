@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import SymptomTracker from "./pages/SymptomTracker";
 import Resources from "./pages/Resources";
 import NotFound from "./pages/NotFound";
+import Treatments from "./pages/Treatments";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,11 @@ const App = () => (
             <Route path="/symptom-tracker" element={
               <ProtectedRoute>
                 <SymptomTracker />
+              </ProtectedRoute>
+            } />
+            <Route path="/treatments" element={
+              <ProtectedRoute>
+                <Treatments />
               </ProtectedRoute>
             } />
             <Route path="/resources" element={<Resources />} />
