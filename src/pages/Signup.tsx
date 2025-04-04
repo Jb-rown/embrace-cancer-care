@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -15,11 +16,29 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { signup } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would connect to the backend API
-    console.log("Signup attempt with:", { name, email, password, role, agreeTerms });
+
+    if (!name || !email || !password || !role || !agreeTerms) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      console.log("Signup attempt with:", { name, email, password, role, agreeTerms });
+      const success = await signup(name, email, password, role);
+      if (success) {
+        // Redirect to dashboard after successful signup
+        navigate("/dashboard");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -41,6 +60,7 @@ const Signup = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -52,6 +72,7 @@ const Signup = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -63,11 +84,17 @@ const Signup = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Your Role</Label>
-              <Select value={role} onValueChange={setRole} required>
+              <Select 
+                value={role} 
+                onValueChange={setRole} 
+                disabled={isSubmitting}
+                required
+              >
                 <SelectTrigger id="role">
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
@@ -84,6 +111,7 @@ const Signup = () => {
                 checked={agreeTerms} 
                 onCheckedChange={() => setAgreeTerms(!agreeTerms)} 
                 required
+                disabled={isSubmitting}
               />
               <Label htmlFor="terms" className="text-sm font-normal">
                 I agree to the{" "}
@@ -96,8 +124,12 @@ const Signup = () => {
                 </Link>
               </Label>
             </div>
-            <Button className="w-full bg-embrace-500 hover:bg-embrace-600" type="submit">
-              Create Account
+            <Button 
+              className="w-full bg-embrace-500 hover:bg-embrace-600" 
+              type="submit"
+              disabled={isSubmitting || !agreeTerms}
+            >
+              {isSubmitting ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
 

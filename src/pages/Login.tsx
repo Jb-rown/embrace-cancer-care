@@ -6,17 +6,39 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Get the redirect path from location state, or default to dashboard
+  const from = location.state?.from || "/dashboard";
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would connect to the backend API
-    console.log("Login attempt with:", { email, password, rememberMe });
+    
+    if (!email || !password) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const success = await login(email, password);
+      if (success) {
+        // Redirect to the page they tried to visit or dashboard
+        navigate(from);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -39,6 +61,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -55,6 +78,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isSubmitting}
               />
             </div>
             <div className="flex items-center space-x-2">
@@ -62,13 +86,18 @@ const Login = () => {
                 id="remember-me" 
                 checked={rememberMe} 
                 onCheckedChange={() => setRememberMe(!rememberMe)} 
+                disabled={isSubmitting}
               />
               <Label htmlFor="remember-me" className="text-sm font-normal">
                 Remember me for 30 days
               </Label>
             </div>
-            <Button className="w-full bg-embrace-500 hover:bg-embrace-600" type="submit">
-              Sign In
+            <Button 
+              className="w-full bg-embrace-500 hover:bg-embrace-600" 
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 
