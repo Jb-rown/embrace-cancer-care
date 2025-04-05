@@ -88,13 +88,14 @@ const Appointments = () => {
   const handleRescheduleAppointment = (data: Omit<Appointment, "id" | "status">) => {
     if (!selectedAppointment) return;
     
-    const updatedAppointments = appointments.map(appointment => 
-      appointment.id === selectedAppointment.id
-        ? { ...appointment, ...data, status: 'scheduled' as const }
-        : appointment
+    setAppointments((prevAppointments) => 
+      prevAppointments.map(appointment => 
+        appointment.id === selectedAppointment.id
+          ? { ...appointment, ...data, status: 'rescheduled' as const }
+          : appointment
+      )
     );
     
-    setAppointments(updatedAppointments);
     toast({
       title: "Appointment Rescheduled",
       description: `Your appointment has been rescheduled for ${format(new Date(data.date), 'PPP')} at ${data.time}.`,
@@ -103,13 +104,14 @@ const Appointments = () => {
 
   // Handle cancelling an appointment
   const handleCancelAppointment = (appointment: Appointment) => {
-    const updatedAppointments = appointments.map(apt => 
-      apt.id === appointment.id
-        ? { ...apt, status: 'cancelled' }
-        : apt
+    setAppointments((prevAppointments) => 
+      prevAppointments.map(apt => 
+        apt.id === appointment.id
+          ? { ...apt, status: 'cancelled' as const }
+          : apt
+      )
     );
     
-    setAppointments(updatedAppointments);
     setIsCancelDialogOpen(false);
     toast({
       title: "Appointment Cancelled",
