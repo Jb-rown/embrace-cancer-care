@@ -1,13 +1,18 @@
 
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, AlertCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Calendar, AlertCircle, Calendar as CalendarIcon, Clock } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Treatments = () => {
-  // This is a basic placeholder for the Treatments page
-  // In a real app, you'd implement functionality to view and manage treatments
+  const [completedTreatments, setCompletedTreatments] = useState(6);
+  const totalTreatments = 10;
+  const percentComplete = (completedTreatments / totalTreatments) * 100;
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar role="patient" />
@@ -62,7 +67,9 @@ const Treatments = () => {
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t">
-                  <Button variant="outline" className="w-full">View All Treatments</Button>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to="/appointments">View All Treatments</Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -111,36 +118,31 @@ const Treatments = () => {
                 <CardDescription>Your journey so far</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col items-center">
-                <div className="relative h-40 w-40 flex items-center justify-center">
-                  <svg className="h-full w-full" viewBox="0 0 100 100">
-                    <circle
-                      className="text-muted stroke-current"
-                      strokeWidth="10"
-                      fill="transparent"
-                      r="40"
-                      cx="50"
-                      cy="50"
-                    />
-                    <circle
-                      className="text-embrace-500 stroke-current"
-                      strokeWidth="10"
-                      strokeLinecap="round"
-                      fill="transparent"
-                      r="40"
-                      cx="50"
-                      cy="50"
-                      strokeDasharray="251.2"
-                      strokeDashoffset="100.5"
-                    />
-                  </svg>
-                  <div className="absolute text-center">
-                    <div className="text-3xl font-bold">60%</div>
-                    <div className="text-sm text-muted-foreground">Complete</div>
+                <div className="w-full mb-4">
+                  <Progress value={percentComplete} className="h-4" />
+                  <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+                    <span>0%</span>
+                    <span>50%</span>
+                    <span>100%</span>
                   </div>
                 </div>
-                <div className="mt-4 text-center">
-                  <p className="text-sm text-muted-foreground">6 of 10 treatments completed</p>
-                  <p className="text-sm text-muted-foreground mt-1">Estimated completion: May 15, 2025</p>
+                
+                <div className="text-center mb-4">
+                  <div className="text-3xl font-bold text-embrace-500">{percentComplete}%</div>
+                  <div className="text-sm text-muted-foreground">Complete</div>
+                </div>
+                
+                <div className="w-full text-center">
+                  <p className="text-sm mb-1">{completedTreatments} of {totalTreatments} treatments completed</p>
+                  <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+                    <CalendarIcon className="h-3 w-3" /> Estimated completion: May 15, 2025
+                  </p>
+                </div>
+                
+                <div className="mt-4 w-full">
+                  <Button className="w-full mt-2" asChild>
+                    <Link to="/appointments">Schedule Next Treatment</Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

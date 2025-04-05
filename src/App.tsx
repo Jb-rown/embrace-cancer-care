@@ -15,6 +15,7 @@ import Resources from "./pages/Resources";
 import NotFound from "./pages/NotFound";
 import Treatments from "./pages/Treatments";
 import Quiz from "./pages/Quiz";
+import Appointments from "./pages/Appointments";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,11 @@ const App = () => (
             <Route path="/treatments" element={
               <ProtectedRoute>
                 <Treatments />
+              </ProtectedRoute>
+            } />
+            <Route path="/appointments" element={
+              <ProtectedRoute>
+                <Appointments />
               </ProtectedRoute>
             } />
             <Route path="/quiz" element={
