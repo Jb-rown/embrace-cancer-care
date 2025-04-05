@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -21,6 +20,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data for demonstration
 const mockSymptoms = [
@@ -97,6 +97,7 @@ const mockSymptoms = [
 ];
 
 export const SymptomHistory = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [selectedSymptom, setSelectedSymptom] = useState<any | null>(null);
@@ -119,7 +120,10 @@ export const SymptomHistory = () => {
 
   const exportToCsv = () => {
     // In a real app, this would generate and download a CSV file
-    toast.success("Symptom history exported successfully");
+    toast({
+      title: "Export Successful",
+      description: "Symptom history exported successfully",
+    });
   };
 
   return (

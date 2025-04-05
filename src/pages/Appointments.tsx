@@ -77,7 +77,7 @@ const Appointments = () => {
       status: 'scheduled',
     };
     
-    setAppointments([...appointments, newAppointment]);
+    setAppointments((prevAppointments) => [...prevAppointments, newAppointment]);
     toast({
       title: "Appointment Scheduled",
       description: `Your appointment has been scheduled for ${format(new Date(data.date), 'PPP')} at ${data.time}.`,
@@ -90,7 +90,7 @@ const Appointments = () => {
     
     const updatedAppointments = appointments.map(appointment => 
       appointment.id === selectedAppointment.id
-        ? { ...appointment, ...data, status: 'scheduled' }
+        ? { ...appointment, ...data, status: 'scheduled' as const }
         : appointment
     );
     

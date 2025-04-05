@@ -166,16 +166,18 @@ export const SymptomChart = () => {
           <CardTitle>Symptom Trends</CardTitle>
           <CardDescription>Track how your symptoms change over time</CardDescription>
         </div>
-        <Select value={timeRange} onValueChange={(value) => setTimeRange(value)} className="w-[150px] mt-2 sm:mt-0">
-          <SelectTrigger>
-            <SelectValue placeholder="Select time range" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="3days">Last 3 days</SelectItem>
-            <SelectItem value="week">Last week</SelectItem>
-            <SelectItem value="month">Last month</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="w-[150px] mt-2 sm:mt-0">
+          <Select value={timeRange} onValueChange={(value) => setTimeRange(value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select time range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="3days">Last 3 days</SelectItem>
+              <SelectItem value="week">Last week</SelectItem>
+              <SelectItem value="month">Last month</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent className="pt-4">
         <div className="flex flex-wrap gap-2 mb-4">
@@ -221,7 +223,11 @@ export const SymptomChart = () => {
                 label={{ value: "Severity", angle: -90, position: "insideLeft", style: { textAnchor: 'middle' } }}
               />
               <Tooltip 
-                formatter={(value, name) => [`${value}/10`, name.charAt(0).toUpperCase() + name.slice(1)]}
+                formatter={(value, name) => {
+                  // Type checking to ensure name is a string
+                  const nameStr = typeof name === 'string' ? name : String(name);
+                  return [`${value}/10`, nameStr.charAt(0).toUpperCase() + nameStr.slice(1)];
+                }}
                 labelFormatter={(label) => `Date: ${label}`}
               />
               <Legend />

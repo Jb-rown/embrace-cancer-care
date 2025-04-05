@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { format } from "date-fns";
 import { CalendarIcon, Clock } from "lucide-react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
@@ -91,11 +90,19 @@ export const AppointmentForm = ({
     defaultValues,
   });
 
-  function handleSubmit(data: FormValues) {
-    onSubmit({
-      ...data,
-      date: format(data.date, "yyyy-MM-dd"),
-    });
+  function handleSubmit(values: FormValues) {
+    const data: Omit<Appointment, "id" | "status"> = {
+      title: values.title,
+      doctorName: values.doctorName,
+      facilityName: values.facilityName,
+      date: format(values.date, "yyyy-MM-dd"),
+      time: values.time,
+      duration: values.duration,
+      type: values.type,
+      notes: values.notes || "",
+    };
+    
+    onSubmit(data);
     toast({
       title: mode === "create" ? "Appointment Created" : "Appointment Rescheduled",
       description: `Your appointment has been ${mode === "create" ? "created" : "rescheduled"} successfully.`,
