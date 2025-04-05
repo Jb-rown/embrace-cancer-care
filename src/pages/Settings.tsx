@@ -71,37 +71,45 @@ const Settings = () => {
                   </p>
                 </div>
                 
-                <Tabs 
-                  defaultValue="appearance" 
-                  value={activeTab} 
-                  onValueChange={setActiveTab}
-                  orientation="vertical"
-                  className="w-full"
-                >
-                  <TabsList className="flex flex-col h-auto items-stretch justify-start">
-                    <TabsTrigger value="appearance" className="justify-start">
-                      <Sun className="mr-2 h-4 w-4" />
-                      Appearance
-                    </TabsTrigger>
-                    <TabsTrigger value="notifications" className="justify-start">
-                      <Bell className="mr-2 h-4 w-4" />
-                      Notifications
-                    </TabsTrigger>
-                    <TabsTrigger value="privacy" className="justify-start">
-                      <Shield className="mr-2 h-4 w-4" />
-                      Privacy
-                    </TabsTrigger>
-                    <TabsTrigger value="account" className="justify-start">
-                      <Globe className="mr-2 h-4 w-4" />
-                      Account
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                <div className="flex flex-col space-y-1">
+                  <Button 
+                    variant={activeTab === "appearance" ? "default" : "ghost"} 
+                    className="justify-start" 
+                    onClick={() => setActiveTab("appearance")}
+                  >
+                    <Sun className="mr-2 h-4 w-4" />
+                    Appearance
+                  </Button>
+                  <Button 
+                    variant={activeTab === "notifications" ? "default" : "ghost"} 
+                    className="justify-start" 
+                    onClick={() => setActiveTab("notifications")}
+                  >
+                    <Bell className="mr-2 h-4 w-4" />
+                    Notifications
+                  </Button>
+                  <Button 
+                    variant={activeTab === "privacy" ? "default" : "ghost"} 
+                    className="justify-start" 
+                    onClick={() => setActiveTab("privacy")}
+                  >
+                    <Shield className="mr-2 h-4 w-4" />
+                    Privacy
+                  </Button>
+                  <Button 
+                    variant={activeTab === "account" ? "default" : "ghost"} 
+                    className="justify-start" 
+                    onClick={() => setActiveTab("account")}
+                  >
+                    <Globe className="mr-2 h-4 w-4" />
+                    Account
+                  </Button>
+                </div>
               </div>
             </aside>
             
             <div className="flex-1 lg:max-w-2xl">
-              <TabsContent value="appearance" className="mt-0">
+              {activeTab === "appearance" && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Appearance</CardTitle>
@@ -159,9 +167,9 @@ const Settings = () => {
                     <Button onClick={handleSaveSettings}>Save preferences</Button>
                   </CardFooter>
                 </Card>
-              </TabsContent>
+              )}
               
-              <TabsContent value="notifications" className="mt-0">
+              {activeTab === "notifications" && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Notifications</CardTitle>
@@ -216,9 +224,9 @@ const Settings = () => {
                     <Button onClick={handleSaveSettings}>Save notification settings</Button>
                   </CardFooter>
                 </Card>
-              </TabsContent>
+              )}
               
-              <TabsContent value="privacy" className="mt-0">
+              {activeTab === "privacy" && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Privacy</CardTitle>
@@ -271,9 +279,9 @@ const Settings = () => {
                     <Button onClick={handleSaveSettings}>Save privacy settings</Button>
                   </CardFooter>
                 </Card>
-              </TabsContent>
+              )}
               
-              <TabsContent value="account" className="mt-0">
+              {activeTab === "account" && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Account Settings</CardTitle>
@@ -307,7 +315,7 @@ const Settings = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </TabsContent>
+              )}
             </div>
           </div>
         </main>
@@ -317,3 +325,4 @@ const Settings = () => {
 };
 
 export default Settings;
+
