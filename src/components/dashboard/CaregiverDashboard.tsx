@@ -2,17 +2,29 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ArrowRight, Bell, Calendar, Clock, FilePlus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowRight, Bell, Calendar, Clock, FileText } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export const CaregiverDashboard = () => {
+  const navigate = useNavigate();
+
+  const handleRecordObservation = () => {
+    navigate("/symptom-tracker");
+    toast.success("Navigated to Symptom Tracker to record an observation");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Caregiver Dashboard</h2>
         <div className="flex items-center gap-2">
-          <Button className="bg-embrace-500 hover:bg-embrace-600" size="sm">
-            <FilePlus className="mr-1 h-4 w-4" /> Record Observation
+          <Button 
+            className="bg-embrace-500 hover:bg-embrace-600" 
+            size="sm"
+            onClick={handleRecordObservation}
+          >
+            <FileText className="mr-1 h-4 w-4" /> Record Observation
           </Button>
         </div>
       </div>

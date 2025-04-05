@@ -2,17 +2,25 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowRight, Activity, Calendar, Clock } from "lucide-react";
+import { Plus, ArrowRight, Activity, Calendar, Clock, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export const PatientDashboard = () => {
+interface PatientDashboardProps {
+  onLogSymptom?: () => void;
+}
+
+export const PatientDashboard = ({ onLogSymptom }: PatientDashboardProps) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Patient Dashboard</h2>
         <div className="flex items-center gap-2">
-          <Button className="bg-embrace-500 hover:bg-embrace-600" size="sm">
-            <Plus className="mr-1 h-4 w-4" /> Log Symptom
+          <Button 
+            className="bg-embrace-500 hover:bg-embrace-600" 
+            size="sm"
+            onClick={onLogSymptom}
+          >
+            <FileText className="mr-1 h-4 w-4" /> Log Symptom
           </Button>
         </div>
       </div>

@@ -12,14 +12,24 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 export const HealthcareDashboard = () => {
+  const handleAddPatient = () => {
+    toast.success("Add Patient functionality will be implemented soon!");
+    // In a real app, this would open a modal or navigate to a patient creation form
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Healthcare Professional Dashboard</h2>
         <div className="flex items-center gap-2">
-          <Button className="bg-embrace-500 hover:bg-embrace-600" size="sm">
+          <Button 
+            className="bg-embrace-500 hover:bg-embrace-600" 
+            size="sm"
+            onClick={handleAddPatient}
+          >
             <PlusCircle className="mr-1 h-4 w-4" /> Add Patient
           </Button>
         </div>
