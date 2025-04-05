@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import Treatments from "./pages/Treatments";
 import Quiz from "./pages/Quiz";
 import Appointments from "./pages/Appointments";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,11 @@ const App = () => (
             <Route path="/appointments" element={
               <ProtectedRoute>
                 <Appointments />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             } />
             <Route path="/quiz" element={
