@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +11,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const SymptomForm = () => {
   const [symptomDate, setSymptomDate] = useState<Date>(new Date());
@@ -22,28 +24,67 @@ export const SymptomForm = () => {
   const [notes, setNotes] = useState("");
   const [mood, setMood] = useState("neutral");
   const [image, setImage] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would connect to the backend API
-    console.log("Submitting symptom:", {
-      symptomDate,
-      symptomCategory,
-      symptomType,
-      severity: parseInt(severity),
-      location,
-      mood,
-      notes,
-      hasImage: !!image,
-    });
-    toast.success("Symptom recorded successfully");
-    // Reset form
-    setSymptomType("");
-    setSeverity("5");
-    setLocation("");
-    setNotes("");
-    setMood("neutral");
-    setImage(null);
+    
+    if (!user) {
+      toast.error("You must be logged in to record symptoms");
+      return;
+    }
+    
+    if (!symptomType) {
+      toast.error("Please select a symptom type");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Format notes to include mood and location if provided
+      const formattedNotes = [
+        `Mood: ${mood}`,
+        location ? `Location: ${location}` : null,
+        notes ? notes : null
+      ].filter(Boolean).join("\n");
+      
+      // Insert the symptom record into Supabase
+      const { error } = await supabase
+        .from('symptoms')
+        .insert({
+          user_id: user.id,
+          symptom_name: symptomType,
+          severity: parseInt(severity),
+          notes: formattedNotes,
+          recorded_at: symptomDate.toISOString()
+        });
+      
+      if (error) throw error;
+      
+      // Show success message
+      toast.success("Symptom recorded successfully");
+      
+      // Reset form
+      setSymptomType("");
+      setSeverity("5");
+      setLocation("");
+      setNotes("");
+      setMood("neutral");
+      setImage(null);
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['symptoms'] });
+      
+    } catch (error) {
+      console.error("Error recording symptom:", error);
+      toast.error("Failed to record symptom. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -261,8 +302,12 @@ export const SymptomForm = () => {
         />
       </div>
 
-      <Button type="submit" className="w-full bg-embrace-500 hover:bg-embrace-600">
-        Record Symptom
+      <Button 
+        type="submit" 
+        className="w-full bg-embrace-500 hover:bg-embrace-600"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? "Recording..." : "Record Symptom"}
       </Button>
     </form>
   );

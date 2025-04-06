@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProfileFormProps {
   user: User;
@@ -41,6 +43,7 @@ const formSchema = z.object({
 export function ProfileForm({ user }: ProfileFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,18 +57,44 @@ export function ProfileForm({ user }: ProfileFormProps) {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    
-    // In a real app, this would be an API call
-    setTimeout(() => {
-      console.log(values);
-      setIsLoading(false);
+    try {
+      // Extract first name and last name from the full name
+      const nameParts = values.name.split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+      
+      // Update the profile in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          first_name: firstName,
+          last_name: lastName,
+          phone_number: values.phone || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
       toast({
         title: "Profile updated",
         description: "Your profile information has been updated successfully.",
       });
-    }, 1000);
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Error",
+        description: "There was an error updating your profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -101,8 +130,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="Your email address" {...field} />
+                      <Input placeholder="Your email address" {...field} disabled />
                     </FormControl>
+                    <FormDescription>
+                      Email cannot be changed
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
