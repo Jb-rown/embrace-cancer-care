@@ -4,9 +4,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Link } from "react-router-dom";
-import { CalendarCheck, HeartPulse, BookOpen, Users, Shield, FilePlus } from "lucide-react";
+import { CalendarCheck, HeartPulse, BookOpen, Users, Shield, FilePlus, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { blogService } from "@/services/supabaseService";
+import { BlogPost } from "./Blog";
 
 const Index = () => {
+  const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  
+  useEffect(() => {
+    const fetchRecentPosts = async () => {
+      try {
+        const posts = await blogService.getBlogPosts();
+        // Get only the 3 most recent posts
+        setRecentPosts(posts.slice(0, 3));
+        setLoadingPosts(false);
+      } catch (error) {
+        console.error("Error fetching recent blog posts:", error);
+        setLoadingPosts(false);
+      }
+    };
+    
+    fetchRecentPosts();
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -136,8 +158,71 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Blog Section */}
+        <section className="py-16 bg-embrace-50">
+          <div className="container px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">
+                Latest From Our Blog
+              </h2>
+              <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+                Stay informed with our latest articles and insights on cancer care.
+              </p>
+            </div>
+
+            {loadingPosts ? (
+              <div className="text-center py-8">Loading latest posts...</div>
+            ) : recentPosts.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">No blog posts available yet.</p>
+                <Link to="/blog">
+                  <Button variant="outline">Visit Our Blog</Button>
+                </Link>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  {recentPosts.map((post) => (
+                    <Card key={post.id} className="h-full flex flex-col">
+                      {post.image_url && (
+                        <div className="h-48 overflow-hidden">
+                          <img
+                            src={post.image_url}
+                            alt={post.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <CardHeader>
+                        <CardTitle className="line-clamp-2">{post.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-grow">
+                        <p className="text-muted-foreground line-clamp-3">{post.summary}</p>
+                      </CardContent>
+                      <div className="p-6 pt-0">
+                        <Link to={`/blog/${post.id}`}>
+                          <Button variant="ghost" className="p-0 h-auto text-embrace-500 hover:text-embrace-600">
+                            Read More <ArrowRight className="ml-1 h-4 w-4" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+                <div className="text-center">
+                  <Link to="/blog">
+                    <Button className="bg-embrace-500 hover:bg-embrace-600">
+                      View All Blog Posts
+                    </Button>
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
         {/* Testimonial Section */}
-        <section className="bg-embrace-50 py-16">
+        <section className="py-16">
           <div className="container px-4 md:px-6">
             <div className="text-center mb-10">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">

@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import { BlogPost } from "@/pages/Blog";
 
 // Type for profile updates
 type ProfileUpdate = {
@@ -21,10 +21,14 @@ type AppointmentUpdate = Database['public']['Tables']['appointments']['Update'];
 // Type for treatment data
 type TreatmentInsert = Database['public']['Tables']['treatments']['Insert'];
 
+// Type for blog post data
+type BlogPostInsert = Omit<BlogPost, 'id'>;
+type BlogPostUpdate = Partial<BlogPostInsert>;
+
 // Enable realtime for specific tables
 export const setupRealtimeSubscriptions = async () => {
   try {
-    // Enable realtime for symptoms, appointments, and treatments tables
+    // Enable realtime for symptoms, appointments, treatments, and blog posts tables
     await supabase.channel('table-db-changes').subscribe();
   } catch (error) {
     console.error("Error setting up realtime subscriptions:", error);
@@ -230,5 +234,67 @@ export const contactService = {
     if (error) throw error;
     
     return true;
+  }
+};
+
+export const blogService = {
+  async getBlogPosts() {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .order('published_at', { ascending: false });
+      
+    if (error) throw error;
+    
+    return data as BlogPost[];
+  },
+  
+  async getBlogPostById(id: string) {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (error) throw error;
+    
+    return data as BlogPost;
+  },
+  
+  async addBlogPost(blogData: BlogPostInsert) {
+    const { error } = await supabase
+      .from('blog_posts')
+      .insert(blogData);
+      
+    if (error) throw error;
+    
+    return true;
+  },
+  
+  async updateBlogPost(id: string, updates: BlogPostUpdate) {
+    const { error } = await supabase
+      .from('blog_posts')
+      .update(updates)
+      .eq('id', id);
+      
+    if (error) throw error;
+    
+    return true;
+  },
+  
+  async deleteBlogPost(id: string) {
+    const { error } = await supabase
+      .from('blog_posts')
+      .delete()
+      .eq('id', id);
+      
+    if (error) throw error;
+    
+    return true;
+  },
+  
+  // Add subscription to blog post changes
+  subscribeToBlogChanges: (callback: (payload: any) => void) => {
+    return createSubscription('blog_posts', '*', callback);
   }
 };
