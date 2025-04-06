@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { PatientDashboard } from "@/components/dashboard/PatientDashboard";
 import { CaregiverDashboard } from "@/components/dashboard/CaregiverDashboard";
@@ -8,11 +8,26 @@ import { Button } from "@/components/ui/button";
 import { User, Users, PlusCircle, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { setupRealtimeSubscriptions } from "@/services/supabaseService";
 
 const Dashboard = () => {
   // In a real app, this would be determined by authentication
   const [userRole, setUserRole] = useState<"patient" | "caregiver" | "healthcare">("patient");
   const navigate = useNavigate();
+
+  // Set up real-time subscriptions when the dashboard loads
+  useEffect(() => {
+    const setupRealtime = async () => {
+      try {
+        await setupRealtimeSubscriptions();
+        console.log("Real-time subscriptions set up successfully");
+      } catch (error) {
+        console.error("Error setting up real-time subscriptions:", error);
+      }
+    };
+    
+    setupRealtime();
+  }, []);
 
   const handleRoleChange = (role: "patient" | "caregiver" | "healthcare") => {
     setUserRole(role);

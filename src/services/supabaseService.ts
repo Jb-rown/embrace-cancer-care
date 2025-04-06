@@ -1,6 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { RealtimeChannel } from "@supabase/supabase-js";
 
 // Type for profile updates
 type ProfileUpdate = {
@@ -19,6 +19,33 @@ type AppointmentUpdate = Database['public']['Tables']['appointments']['Update'];
 
 // Type for treatment data
 type TreatmentInsert = Database['public']['Tables']['treatments']['Insert'];
+
+// Enable realtime for specific tables
+export const setupRealtimeSubscriptions = async () => {
+  // Enable realtime for symptoms, appointments, and treatments tables
+  await supabase.rpc('supabase_realtime', { table: 'symptoms', insert: true, update: true, delete: true });
+  await supabase.rpc('supabase_realtime', { table: 'appointments', insert: true, update: true, delete: true });
+  await supabase.rpc('supabase_realtime', { table: 'treatments', insert: true, update: true, delete: true });
+  await supabase.rpc('supabase_realtime', { table: 'profiles', insert: true, update: true, delete: true });
+};
+
+// Helper to create a subscription channel
+export const createSubscription = (
+  table: string, 
+  event: 'INSERT' | 'UPDATE' | 'DELETE' | '*',
+  callback: (payload: any) => void
+): RealtimeChannel => {
+  const channel = supabase
+    .channel(`public:${table}`)
+    .on('postgres_changes', { 
+      event: event, 
+      schema: 'public', 
+      table: table 
+    }, callback)
+    .subscribe();
+  
+  return channel;
+};
 
 export const profileService = {
   async getCurrentUserProfile() {
@@ -46,6 +73,15 @@ export const profileService = {
     if (error) throw error;
     
     return true;
+  },
+  
+  // Add subscription to profile changes
+  subscribeToProfileChanges: (userId: string, callback: (payload: any) => void) => {
+    return createSubscription('profiles', '*', (payload) => {
+      if (payload.new.id === userId) {
+        callback(payload);
+      }
+    });
   }
 };
 
@@ -70,6 +106,15 @@ export const symptomService = {
     if (error) throw error;
     
     return true;
+  },
+  
+  // Add subscription to symptom changes
+  subscribeToSymptomChanges: (userId: string, callback: (payload: any) => void) => {
+    return createSubscription('symptoms', '*', (payload) => {
+      if (payload.new.user_id === userId) {
+        callback(payload);
+      }
+    });
   }
 };
 
@@ -116,6 +161,15 @@ export const appointmentService = {
     if (error) throw error;
     
     return true;
+  },
+  
+  // Add subscription to appointment changes
+  subscribeToAppointmentChanges: (userId: string, callback: (payload: any) => void) => {
+    return createSubscription('appointments', '*', (payload) => {
+      if (payload.new.user_id === userId) {
+        callback(payload);
+      }
+    });
   }
 };
 
@@ -140,6 +194,15 @@ export const treatmentService = {
     if (error) throw error;
     
     return true;
+  },
+  
+  // Add subscription to treatment changes
+  subscribeToTreatmentChanges: (userId: string, callback: (payload: any) => void) => {
+    return createSubscription('treatments', '*', (payload) => {
+      if (payload.new.user_id === userId) {
+        callback(payload);
+      }
+    });
   }
 };
 

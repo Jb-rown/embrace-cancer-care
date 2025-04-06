@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -9,7 +10,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Filter, Calendar, Download, Eye } from "lucide-react";
-import { useState } from "react";
 import {
   Drawer,
   DrawerClose,
@@ -21,105 +21,137 @@ import {
 } from "@/components/ui/drawer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { symptomService } from "@/services/supabaseService";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { RealtimeChannel } from "@supabase/supabase-js";
 
-// Mock data for demonstration
-const mockSymptoms = [
-  {
-    id: "1",
-    date: "Apr 3, 2025",
-    category: "physical",
-    type: "Pain",
-    severity: 6,
-    location: "Lower back",
-    mood: "bad",
-    notes: "Pain worsens when sitting for long periods",
-  },
-  {
-    id: "2",
-    date: "Apr 2, 2025",
-    category: "physical",
-    type: "Fatigue",
-    severity: 7,
-    location: "General",
-    mood: "bad",
-    notes: "Felt exhausted all day, needed to nap twice",
-  },
-  {
-    id: "3",
-    date: "Apr 1, 2025",
-    category: "digestive",
-    type: "Nausea",
-    severity: 4,
-    location: "Stomach",
-    mood: "neutral",
-    notes: "Mild nausea after breakfast, subsided by noon",
-  },
-  {
-    id: "4", 
-    date: "Mar 29, 2025",
-    category: "neurological",
-    type: "Headache",
-    severity: 5,
-    location: "Temples",
-    mood: "bad",
-    notes: "Throbbing headache, lasted about 3 hours",
-  },
-  {
-    id: "5",
-    date: "Mar 28, 2025",
-    category: "physical",
-    type: "Fatigue",
-    severity: 6,
-    location: "General",
-    mood: "terrible",
-    notes: "Difficulty concentrating and staying awake",
-  },
-  {
-    id: "6",
-    date: "Mar 26, 2025",
-    category: "emotional",
-    type: "Anxiety",
-    severity: 8,
-    location: "N/A",
-    mood: "terrible",
-    notes: "Felt overwhelmed about upcoming treatment",
-  },
-  {
-    id: "7",
-    date: "Mar 25, 2025",
-    category: "digestive",
-    type: "Appetite Loss",
-    severity: 6,
-    location: "N/A",
-    mood: "bad",
-    notes: "Couldn't finish meals all day",
-  },
-];
+type Symptom = {
+  id: string;
+  recorded_at: string;
+  severity: number;
+  symptom_name: string;
+  user_id: string;
+  notes: string | null;
+  category?: string;
+  location?: string;
+  mood?: string;
+};
 
 export const SymptomHistory = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [selectedSymptom, setSelectedSymptom] = useState<any | null>(null);
+  const [selectedSymptom, setSelectedSymptom] = useState<Symptom | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [symptoms, setSymptoms] = useState<Symptom[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredSymptoms = mockSymptoms.filter(symptom => {
-    const matchesSearch = symptom.type.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         symptom.notes.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         symptom.location.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    if (!user) return;
+    
+    let channel: RealtimeChannel;
+    
+    const fetchSymptoms = async () => {
+      try {
+        setIsLoading(true);
+        const data = await symptomService.getSymptoms(user.id);
+        
+        const processedData = data.map(processSymptomData);
+        setSymptoms(processedData);
+      } catch (error) {
+        console.error("Error fetching symptoms:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load symptoms. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    const setupRealtime = () => {
+      channel = symptomService.subscribeToSymptomChanges(user.id, (payload) => {
+        console.log("Real-time update received:", payload);
+        
+        if (payload.eventType === 'INSERT') {
+          setSymptoms(prev => [processSymptomData(payload.new), ...prev]);
+          toast({
+            title: "New Symptom",
+            description: "A new symptom has been recorded successfully",
+          });
+        } else if (payload.eventType === 'UPDATE') {
+          setSymptoms(prev => 
+            prev.map(s => s.id === payload.new.id ? processSymptomData(payload.new) : s)
+          );
+        } else if (payload.eventType === 'DELETE') {
+          setSymptoms(prev => prev.filter(s => s.id !== payload.old.id));
+        }
+      });
+    };
+    
+    fetchSymptoms();
+    setupRealtime();
+    
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [user]);
+
+  const processSymptomData = (symptom: any): Symptom => {
+    const processedSymptom: Symptom = { ...symptom };
+    
+    if (symptom.notes) {
+      const lines = symptom.notes.split('\n');
+      
+      lines.forEach(line => {
+        if (line.startsWith('Mood:')) {
+          processedSymptom.mood = line.replace('Mood:', '').trim();
+        } else if (line.startsWith('Location:')) {
+          processedSymptom.location = line.replace('Location:', '').trim();
+        }
+      });
+    }
+    
+    if (symptom.symptom_name) {
+      if (['pain', 'fatigue', 'weakness', 'numbness', 'swelling'].includes(symptom.symptom_name)) {
+        processedSymptom.category = 'physical';
+      } else if (['nausea', 'vomiting', 'appetite-loss', 'constipation', 'diarrhea'].includes(symptom.symptom_name)) {
+        processedSymptom.category = 'digestive';
+      } else if (['headache', 'dizziness', 'confusion', 'memory', 'balance'].includes(symptom.symptom_name)) {
+        processedSymptom.category = 'neurological';
+      } else if (['anxiety', 'depression', 'mood-changes', 'fear', 'irritability'].includes(symptom.symptom_name)) {
+        processedSymptom.category = 'emotional';
+      } else {
+        processedSymptom.category = 'other';
+      }
+    }
+    
+    return processedSymptom;
+  };
+
+  const filteredSymptoms = symptoms.filter(symptom => {
+    const matchesSearch = 
+      symptom.symptom_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (symptom.notes?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+      (symptom.location?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
     
     const matchesCategory = !categoryFilter || symptom.category === categoryFilter;
     
     return matchesSearch && matchesCategory;
   });
 
-  const handleViewDetails = (symptom: any) => {
+  const handleViewDetails = (symptom: Symptom) => {
     setSelectedSymptom(symptom);
     setIsDrawerOpen(true);
   };
 
   const exportToCsv = () => {
-    // In a real app, this would generate and download a CSV file
     toast({
       title: "Export Successful",
       description: "Symptom history exported successfully",
@@ -175,7 +207,13 @@ export const SymptomHistory = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredSymptoms.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  Loading symptoms...
+                </TableCell>
+              </TableRow>
+            ) : filteredSymptoms.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   No symptoms found matching your criteria
@@ -184,12 +222,14 @@ export const SymptomHistory = () => {
             ) : (
               filteredSymptoms.map((symptom) => (
                 <TableRow key={symptom.id}>
-                  <TableCell>{symptom.date}</TableCell>
+                  <TableCell>
+                    {format(new Date(symptom.recorded_at), 'MMM d, yyyy')}
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span>{symptom.type}</span>
+                      <span>{formatSymptomName(symptom.symptom_name)}</span>
                       <Badge variant="outline" className="mt-1 w-fit">
-                        {symptom.category.charAt(0).toUpperCase() + symptom.category.slice(1)}
+                        {symptom.category ? symptom.category.charAt(0).toUpperCase() + symptom.category.slice(1) : 'Other'}
                       </Badge>
                     </div>
                   </TableCell>
@@ -197,10 +237,10 @@ export const SymptomHistory = () => {
                     <SeverityBadge severity={symptom.severity} />
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {symptom.location}
+                    {symptom.location || 'Not specified'}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <MoodBadge mood={symptom.mood} />
+                    <MoodBadge mood={symptom.mood || 'neutral'} />
                   </TableCell>
                   <TableCell className="text-right">
                     <Button 
@@ -227,19 +267,19 @@ export const SymptomHistory = () => {
               <DrawerHeader>
                 <DrawerTitle>Symptom Details</DrawerTitle>
                 <DrawerDescription>
-                  Recorded on {selectedSymptom.date}
+                  Recorded on {format(new Date(selectedSymptom.recorded_at), 'PPP')}
                 </DrawerDescription>
               </DrawerHeader>
               <div className="px-4">
                 <dl className="divide-y divide-border">
                   <div className="py-3 grid grid-cols-3">
                     <dt className="font-medium text-muted-foreground">Type:</dt>
-                    <dd className="col-span-2">{selectedSymptom.type}</dd>
+                    <dd className="col-span-2">{formatSymptomName(selectedSymptom.symptom_name)}</dd>
                   </div>
                   <div className="py-3 grid grid-cols-3">
                     <dt className="font-medium text-muted-foreground">Category:</dt>
                     <dd className="col-span-2">
-                      {selectedSymptom.category.charAt(0).toUpperCase() + selectedSymptom.category.slice(1)}
+                      {selectedSymptom.category ? selectedSymptom.category.charAt(0).toUpperCase() + selectedSymptom.category.slice(1) : 'Other'}
                     </dd>
                   </div>
                   <div className="py-3 grid grid-cols-3">
@@ -248,17 +288,17 @@ export const SymptomHistory = () => {
                   </div>
                   <div className="py-3 grid grid-cols-3">
                     <dt className="font-medium text-muted-foreground">Location:</dt>
-                    <dd className="col-span-2">{selectedSymptom.location}</dd>
+                    <dd className="col-span-2">{selectedSymptom.location || 'Not specified'}</dd>
                   </div>
                   <div className="py-3 grid grid-cols-3">
                     <dt className="font-medium text-muted-foreground">Mood:</dt>
                     <dd className="col-span-2">
-                      <MoodBadge mood={selectedSymptom.mood} showLabel />
+                      <MoodBadge mood={selectedSymptom.mood || 'neutral'} showLabel />
                     </dd>
                   </div>
                   <div className="py-3 grid grid-cols-3">
                     <dt className="font-medium text-muted-foreground">Notes:</dt>
-                    <dd className="col-span-2">{selectedSymptom.notes}</dd>
+                    <dd className="col-span-2">{(selectedSymptom.notes || '').replace(/Mood:.*\n|Location:.*\n/g, '')}</dd>
                   </div>
                 </dl>
               </div>
@@ -273,6 +313,13 @@ export const SymptomHistory = () => {
       </Drawer>
     </div>
   );
+};
+
+const formatSymptomName = (name: string): string => {
+  return name
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 };
 
 const SeverityBadge = ({ severity }: { severity: number }) => {

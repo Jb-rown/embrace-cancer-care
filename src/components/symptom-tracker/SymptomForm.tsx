@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,7 +63,10 @@ export const SymptomForm = () => {
       });
       
       // Show success message
-      toast.success("Symptom recorded successfully");
+      toast.success("Symptom recorded successfully", {
+        description: "You'll see it in the Symptom History tab instantly.",
+        duration: 5000,
+      });
       
       // Reset form
       setSymptomType("");
@@ -72,8 +76,7 @@ export const SymptomForm = () => {
       setMood("neutral");
       setImage(null);
       
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['symptoms'] });
+      // No need to invalidate queries since we're using real-time subscriptions now
       
     } catch (error) {
       console.error("Error recording symptom:", error);
