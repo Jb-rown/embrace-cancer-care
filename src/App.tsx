@@ -18,6 +18,8 @@ import Quiz from "./pages/Quiz";
 import Appointments from "./pages/Appointments";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 import { useState } from "react";
 
 const App = () => {
@@ -35,6 +37,8 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />
