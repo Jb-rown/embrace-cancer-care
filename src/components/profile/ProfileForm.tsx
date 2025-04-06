@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -18,7 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { profileService } from "@/services/supabaseService";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface ProfileFormProps {
@@ -65,18 +64,13 @@ export function ProfileForm({ user }: ProfileFormProps) {
       const firstName = nameParts[0];
       const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
       
-      // Update the profile in Supabase
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          first_name: firstName,
-          last_name: lastName,
-          phone_number: values.phone || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-      
-      if (error) throw error;
+      // Update the profile using our service
+      await profileService.updateProfile(user.id, {
+        first_name: firstName,
+        last_name: lastName,
+        phone_number: values.phone || null,
+        updated_at: new Date().toISOString()
+      });
       
       toast({
         title: "Profile updated",

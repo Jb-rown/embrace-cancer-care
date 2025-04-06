@@ -11,9 +11,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { symptomService } from "@/services/supabaseService";
 
 export const SymptomForm = () => {
   const [symptomDate, setSymptomDate] = useState<Date>(new Date());
@@ -52,18 +52,14 @@ export const SymptomForm = () => {
         notes ? notes : null
       ].filter(Boolean).join("\n");
       
-      // Insert the symptom record into Supabase
-      const { error } = await supabase
-        .from('symptoms')
-        .insert({
-          user_id: user.id,
-          symptom_name: symptomType,
-          severity: parseInt(severity),
-          notes: formattedNotes,
-          recorded_at: symptomDate.toISOString()
-        });
-      
-      if (error) throw error;
+      // Insert the symptom record using our service
+      await symptomService.addSymptom({
+        user_id: user.id,
+        symptom_name: symptomType,
+        severity: parseInt(severity),
+        notes: formattedNotes,
+        recorded_at: symptomDate.toISOString()
+      });
       
       // Show success message
       toast.success("Symptom recorded successfully");

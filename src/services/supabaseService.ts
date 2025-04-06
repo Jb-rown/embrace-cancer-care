@@ -1,5 +1,24 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+// Type for profile updates
+type ProfileUpdate = {
+  first_name?: string;
+  last_name?: string;
+  phone_number?: string | null;
+  updated_at?: string;
+};
+
+// Type for symptom data
+type SymptomInsert = Database['public']['Tables']['symptoms']['Insert'];
+
+// Type for appointment data
+type AppointmentInsert = Database['public']['Tables']['appointments']['Insert'];
+type AppointmentUpdate = Database['public']['Tables']['appointments']['Update'];
+
+// Type for treatment data
+type TreatmentInsert = Database['public']['Tables']['treatments']['Insert'];
 
 export const profileService = {
   async getCurrentUserProfile() {
@@ -18,7 +37,7 @@ export const profileService = {
     return data;
   },
   
-  async updateProfile(userId: string, updates: any) {
+  async updateProfile(userId: string, updates: ProfileUpdate) {
     const { error } = await supabase
       .from('profiles')
       .update(updates)
@@ -43,7 +62,7 @@ export const symptomService = {
     return data;
   },
   
-  async addSymptom(symptomData: any) {
+  async addSymptom(symptomData: SymptomInsert) {
     const { error } = await supabase
       .from('symptoms')
       .insert(symptomData);
@@ -67,7 +86,7 @@ export const appointmentService = {
     return data;
   },
   
-  async addAppointment(appointmentData: any) {
+  async addAppointment(appointmentData: AppointmentInsert) {
     const { error } = await supabase
       .from('appointments')
       .insert(appointmentData);
@@ -77,7 +96,7 @@ export const appointmentService = {
     return true;
   },
   
-  async updateAppointment(id: string, updates: any) {
+  async updateAppointment(id: string, updates: AppointmentUpdate) {
     const { error } = await supabase
       .from('appointments')
       .update(updates)
@@ -113,7 +132,7 @@ export const treatmentService = {
     return data;
   },
   
-  async addTreatment(treatmentData: any) {
+  async addTreatment(treatmentData: TreatmentInsert) {
     const { error } = await supabase
       .from('treatments')
       .insert(treatmentData);
@@ -138,7 +157,7 @@ export const resourceService = {
 };
 
 export const contactService = {
-  async submitContactForm(formData: any) {
+  async submitContactForm(formData: Database['public']['Tables']['contact_submissions']['Insert']) {
     const { error } = await supabase
       .from('contact_submissions')
       .insert(formData);
