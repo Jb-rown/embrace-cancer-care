@@ -6,7 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
-import { Calendar, User, ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { Calendar, User, ArrowLeft, Edit, Trash2, ThumbsUp, Share, MessageCircle } from "lucide-react";
 import { blogService } from "@/services/supabaseService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -27,6 +27,8 @@ const BlogPost = () => {
   const [post, setPost] = useState<BlogPostType | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [hasLiked, setHasLiked] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -58,6 +60,34 @@ const BlogPost = () => {
     } catch (error) {
       console.error("Error deleting blog post:", error);
       toast.error("Failed to delete blog post");
+    }
+  };
+
+  const handleLike = () => {
+    if (hasLiked) {
+      setLikeCount(prev => Math.max(0, prev - 1));
+      setHasLiked(false);
+      toast.success("Like removed");
+    } else {
+      setLikeCount(prev => prev + 1);
+      setHasLiked(true);
+      toast.success("Post liked!");
+    }
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: post?.title || "Blog Post",
+        text: post?.summary || "Check out this blog post",
+        url: window.location.href,
+      })
+      .then(() => toast.success("Post shared successfully"))
+      .catch(error => console.error("Error sharing post", error));
+    } else {
+      // Fallback for browsers that don't support the Web Share API
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard");
     }
   };
 
@@ -139,6 +169,32 @@ const BlogPost = () => {
                 {post.content.split('\n').map((paragraph, idx) => (
                   <p key={idx} className="mb-4">{paragraph}</p>
                 ))}
+              </div>
+
+              <div className="flex items-center justify-between mt-8 pt-4 border-t">
+                <div className="flex items-center gap-4">
+                  <Button 
+                    onClick={handleLike} 
+                    variant="ghost" 
+                    className={`flex items-center gap-2 ${hasLiked ? 'text-blue-500' : ''}`}
+                  >
+                    <ThumbsUp className="h-4 w-4" /> {likeCount > 0 ? likeCount : ''} Like
+                  </Button>
+                  <Button 
+                    onClick={() => navigate(`/blog/${post.id}#comments`)} 
+                    variant="ghost" 
+                    className="flex items-center gap-2"
+                  >
+                    <MessageCircle className="h-4 w-4" /> Comment
+                  </Button>
+                </div>
+                <Button 
+                  onClick={handleShare} 
+                  variant="ghost" 
+                  className="flex items-center gap-2"
+                >
+                  <Share className="h-4 w-4" /> Share
+                </Button>
               </div>
             </div>
           </article>

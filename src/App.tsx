@@ -44,8 +44,16 @@ const App = () => {
               <Route path="/contact" element={<Contact />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:id" element={<BlogPost />} />
-              <Route path="/blog/create" element={<BlogEditor />} />
-              <Route path="/blog/edit/:id" element={<BlogEditor />} />
+              <Route path="/blog/create" element={
+                <ProtectedRoute requiredRole="healthcare">
+                  <BlogEditor />
+                </ProtectedRoute>
+              } />
+              <Route path="/blog/edit/:id" element={
+                <ProtectedRoute requiredRole="healthcare">
+                  <BlogEditor />
+                </ProtectedRoute>
+              } />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />
