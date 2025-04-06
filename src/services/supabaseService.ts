@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { RealtimeChannel } from "@supabase/supabase-js";
@@ -22,11 +23,12 @@ type TreatmentInsert = Database['public']['Tables']['treatments']['Insert'];
 
 // Enable realtime for specific tables
 export const setupRealtimeSubscriptions = async () => {
-  // Enable realtime for symptoms, appointments, and treatments tables
-  await supabase.rpc('supabase_realtime', { table: 'symptoms', insert: true, update: true, delete: true });
-  await supabase.rpc('supabase_realtime', { table: 'appointments', insert: true, update: true, delete: true });
-  await supabase.rpc('supabase_realtime', { table: 'treatments', insert: true, update: true, delete: true });
-  await supabase.rpc('supabase_realtime', { table: 'profiles', insert: true, update: true, delete: true });
+  try {
+    // Enable realtime for symptoms, appointments, and treatments tables
+    await supabase.channel('table-db-changes').subscribe();
+  } catch (error) {
+    console.error("Error setting up realtime subscriptions:", error);
+  }
 };
 
 // Helper to create a subscription channel

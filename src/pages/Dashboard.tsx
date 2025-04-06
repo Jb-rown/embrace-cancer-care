@@ -17,16 +17,9 @@ const Dashboard = () => {
 
   // Set up real-time subscriptions when the dashboard loads
   useEffect(() => {
-    const setupRealtime = async () => {
-      try {
-        await setupRealtimeSubscriptions();
-        console.log("Real-time subscriptions set up successfully");
-      } catch (error) {
-        console.error("Error setting up real-time subscriptions:", error);
-      }
-    };
-    
-    setupRealtime();
+    setupRealtimeSubscriptions()
+      .then(() => console.log("Real-time subscriptions set up successfully"))
+      .catch(error => console.error("Error setting up real-time subscriptions:", error));
   }, []);
 
   const handleRoleChange = (role: "patient" | "caregiver" | "healthcare") => {

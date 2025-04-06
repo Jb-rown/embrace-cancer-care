@@ -26,6 +26,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 type Symptom = {
   id: string;
