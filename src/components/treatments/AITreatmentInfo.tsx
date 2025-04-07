@@ -15,10 +15,12 @@ interface AITreatmentInfoProps {
 export const AITreatmentInfo = ({ treatmentName, treatmentType = "cancer" }: AITreatmentInfoProps) => {
   const [loading, setLoading] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [infoType, setInfoType] = useState<"overview" | "sideEffects" | "preparation" | "questions">("overview");
 
   const generateInfo = async () => {
     setLoading(true);
+    setError(null);
 
     let prompt = "";
     switch (infoType) {
@@ -43,11 +45,16 @@ export const AITreatmentInfo = ({ treatmentName, treatmentType = "cancer" }: AIT
       });
 
       if (response.error) {
+        setError(response.error);
         toast.error(response.error);
-      } else {
+      } else if (response.suggestion) {
         setInfo(response.suggestion);
+      } else {
+        setError("No information was returned. Please try again later.");
+        toast.error("Failed to generate treatment information");
       }
     } catch (error) {
+      setError("Failed to generate treatment information. Please try again later.");
       toast.error("Failed to generate treatment information");
       console.error(error);
     } finally {
@@ -131,7 +138,17 @@ export const AITreatmentInfo = ({ treatmentName, treatmentType = "cancer" }: AIT
           )}
         </Button>
         
-        {info && (
+        {error && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>AI Service Unavailable</AlertTitle>
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {info && !error && (
           <div className="mt-4 rounded-md border p-4 bg-muted/50">
             <div className="prose prose-sm max-w-none">
               <h3 className="text-lg font-medium mb-2">

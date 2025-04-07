@@ -64,17 +64,18 @@ export const createSubscription = (
   callback: (payload: any) => void
 ): RealtimeChannel => {
   // Creating a properly named channel for this subscription
-  const channel = supabase.channel(`${table}-changes`)
-    .on(
-      'postgres_changes', 
-      { 
-        event: event, 
-        schema: 'public', 
-        table: table 
-      }, 
-      callback
-    )
-    .subscribe();
+  const channel = supabase.channel(`${table}-changes`);
+  
+  // Add the subscription to the channel
+  channel.on(
+    'postgres_changes', 
+    { 
+      event: event, 
+      schema: 'public', 
+      table: table 
+    }, 
+    callback
+  ).subscribe();
   
   return channel;
 };
