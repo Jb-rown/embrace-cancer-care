@@ -5,29 +5,42 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, AlertCircle, Calendar as CalendarIcon, Clock } from "lucide-react";
+import { Calendar, AlertCircle, Calendar as CalendarIcon, Clock, Plus } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AITreatmentInfo } from "@/components/treatments/AITreatmentInfo";
+import { TreatmentForm } from "@/components/treatments/TreatmentForm";
+import { TreatmentList } from "@/components/treatments/TreatmentList";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Treatments = () => {
+  const { user } = useAuth();
   const [completedTreatments, setCompletedTreatments] = useState(6);
   const totalTreatments = 10;
   const percentComplete = (completedTreatments / totalTreatments) * 100;
   const [selectedTreatment, setSelectedTreatment] = useState("Chemotherapy");
+  const [isTreatmentFormOpen, setIsTreatmentFormOpen] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar role="patient" />
+      <Sidebar role={user?.role || "patient"} />
       <div className="flex-1 overflow-auto">
         <main className="p-6">
-          <h1 className="text-3xl font-bold tracking-tight mb-6">Treatment Plan</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold tracking-tight">Treatment Plan</h1>
+            <Button 
+              onClick={() => setIsTreatmentFormOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Treatment
+            </Button>
+          </div>
           
           <Alert className="mb-6">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Coming Soon</AlertTitle>
+            <AlertTitle>Tracking Your Progress</AlertTitle>
             <AlertDescription>
-              The complete treatment management functionality is under development. 
-              Basic features are available below.
+              Track your treatment journey and access helpful information about each treatment type.
             </AlertDescription>
           </Alert>
           
@@ -70,7 +83,7 @@ const Treatments = () => {
                 </div>
                 <div className="mt-4 pt-4 border-t">
                   <Button variant="outline" className="w-full" asChild>
-                    <Link to="/appointments">View All Treatments</Link>
+                    <Link to="/appointments">View All Appointments</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -150,15 +163,21 @@ const Treatments = () => {
             </Card>
           </div>
           
+          {/* Treatment List Section */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-4">Your Treatments</h2>
+            <TreatmentList />
+          </div>
+          
           {/* Treatment AI Information Section */}
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-4">Treatment Information</h2>
             <div className="grid gap-6 md:grid-cols-5">
               <Card className="md:col-span-2">
                 <CardHeader>
-                  <CardTitle className="text-lg">Your Treatments</CardTitle>
+                  <CardTitle className="text-lg">Select a Treatment</CardTitle>
                   <CardDescription>
-                    Select a treatment to learn more
+                    Get detailed information about specific treatments
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -208,6 +227,12 @@ const Treatments = () => {
           </div>
         </main>
       </div>
+      
+      {/* Treatment Form Dialog */}
+      <TreatmentForm
+        isOpen={isTreatmentFormOpen}
+        onClose={() => setIsTreatmentFormOpen(false)}
+      />
     </div>
   );
 };

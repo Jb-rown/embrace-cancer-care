@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { RealtimeChannel } from "@supabase/supabase-js";
@@ -21,6 +20,7 @@ type AppointmentUpdate = Database['public']['Tables']['appointments']['Update'];
 
 // Type for treatment data
 type TreatmentInsert = Database['public']['Tables']['treatments']['Insert'];
+type TreatmentUpdate = Database['public']['Tables']['treatments']['Update'];
 
 // Type for blog post data
 type BlogPostInsert = Omit<BlogPost, 'id'>;
@@ -52,6 +52,8 @@ export const setupRealtimeSubscriptions = async () => {
         table: 'blog_posts'
       }, () => {})
       .subscribe();
+      
+    console.info("Real-time subscriptions set up successfully");
   } catch (error) {
     console.error("Error setting up realtime subscriptions:", error);
   }
@@ -108,7 +110,6 @@ export const profileService = {
     return true;
   },
   
-  // Add subscription to profile changes
   subscribeToProfileChanges: (userId: string, callback: (payload: any) => void) => {
     return createSubscription('profiles', '*', (payload) => {
       if (payload.new.id === userId) {
@@ -141,7 +142,6 @@ export const symptomService = {
     return true;
   },
   
-  // Add subscription to symptom changes
   subscribeToSymptomChanges: (userId: string, callback: (payload: any) => void) => {
     return createSubscription('symptoms', '*', (payload) => {
       if (payload.new.user_id === userId) {
@@ -196,7 +196,6 @@ export const appointmentService = {
     return true;
   },
   
-  // Add subscription to appointment changes
   subscribeToAppointmentChanges: (userId: string, callback: (payload: any) => void) => {
     return createSubscription('appointments', '*', (payload) => {
       if (payload.new.user_id === userId) {
@@ -229,10 +228,31 @@ export const treatmentService = {
     return true;
   },
   
-  // Add subscription to treatment changes
+  async updateTreatment(id: string, updates: TreatmentUpdate) {
+    const { error } = await supabase
+      .from('treatments')
+      .update(updates)
+      .eq('id', id);
+      
+    if (error) throw error;
+    
+    return true;
+  },
+  
+  async deleteTreatment(id: string) {
+    const { error } = await supabase
+      .from('treatments')
+      .delete()
+      .eq('id', id);
+      
+    if (error) throw error;
+    
+    return true;
+  },
+  
   subscribeToTreatmentChanges: (userId: string, callback: (payload: any) => void) => {
     return createSubscription('treatments', '*', (payload) => {
-      if (payload.new.user_id === userId) {
+      if (payload.new && payload.new.user_id === userId) {
         callback(payload);
       }
     });
@@ -320,7 +340,6 @@ export const blogService = {
     return true;
   },
   
-  // Add subscription to blog post changes
   subscribeToBlogChanges: (callback: (payload: any) => void) => {
     return createSubscription('blog_posts', '*', callback);
   }
