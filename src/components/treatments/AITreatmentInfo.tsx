@@ -6,6 +6,7 @@ import { Loader2, Sparkles, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { aiService } from "@/services/aiService";
 import { toast } from "sonner";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface AITreatmentInfoProps {
   treatmentName: string;
@@ -17,6 +18,7 @@ export const AITreatmentInfo = ({ treatmentName, treatmentType = "cancer" }: AIT
   const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [infoType, setInfoType] = useState<"overview" | "sideEffects" | "preparation" | "questions">("overview");
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const generateInfo = async () => {
     setLoading(true);
@@ -49,14 +51,15 @@ export const AITreatmentInfo = ({ treatmentName, treatmentType = "cancer" }: AIT
         toast.error(response.error);
       } else if (response.suggestion) {
         setInfo(response.suggestion);
+        setIsCollapsed(false); // Expand content when new info is loaded
       } else {
         setError("No information was returned. Please try again later.");
         toast.error("Failed to generate treatment information");
       }
     } catch (error) {
+      console.error("Error in AITreatmentInfo:", error);
       setError("Failed to generate treatment information. Please try again later.");
       toast.error("Failed to generate treatment information");
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -149,19 +152,34 @@ export const AITreatmentInfo = ({ treatmentName, treatmentType = "cancer" }: AIT
         )}
         
         {info && !error && (
-          <div className="mt-4 rounded-md border p-4 bg-muted/50">
-            <div className="prose prose-sm max-w-none">
-              <h3 className="text-lg font-medium mb-2">
-                {infoType === "overview" ? `About ${treatmentName}` : 
-                 infoType === "sideEffects" ? `Managing Side Effects` : 
-                 infoType === "preparation" ? `Preparing for Treatment` : 
-                 `Questions for Your Provider`}
-              </h3>
-              <div className="whitespace-pre-wrap">
-                {info}
+          <Collapsible 
+            open={!isCollapsed}
+            onOpenChange={setIsCollapsed}
+            className="mt-4 rounded-md border bg-muted/50 overflow-hidden"
+          >
+            <div className="p-4">
+              <div className="prose prose-sm max-w-none">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-medium m-0">
+                    {infoType === "overview" ? `About ${treatmentName}` : 
+                    infoType === "sideEffects" ? `Managing Side Effects` : 
+                    infoType === "preparation" ? `Preparing for Treatment` : 
+                    `Questions for Your Provider`}
+                  </h3>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      {isCollapsed ? "Show More" : "Show Less"}
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
+                <CollapsibleContent>
+                  <div className="whitespace-pre-wrap">
+                    {info}
+                  </div>
+                </CollapsibleContent>
               </div>
             </div>
-          </div>
+          </Collapsible>
         )}
       </CardContent>
     </Card>
