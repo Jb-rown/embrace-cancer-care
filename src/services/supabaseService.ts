@@ -29,7 +29,28 @@ type BlogPostUpdate = Partial<BlogPostInsert>;
 export const setupRealtimeSubscriptions = async () => {
   try {
     // Enable realtime for symptoms, appointments, treatments, and blog posts tables
-    await supabase.channel('table-db-changes').subscribe();
+    await supabase.channel('table-db-changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public',
+        table: 'symptoms'
+      }, () => {})
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public',
+        table: 'appointments'
+      }, () => {})
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public',
+        table: 'treatments'
+      }, () => {})
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public',
+        table: 'blog_posts'
+      }, () => {})
+      .subscribe();
   } catch (error) {
     console.error("Error setting up realtime subscriptions:", error);
   }
