@@ -8,11 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Save } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Save, Sparkles } from "lucide-react";
 import { blogService } from "@/services/supabaseService";
 import { toast } from "sonner";
 import { BlogPost } from "./Blog";
 import { useAuth } from "@/contexts/AuthContext";
+import { AIContentSuggestions } from "@/components/blog/AIContentSuggestions";
 
 const BlogEditor = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +32,7 @@ const BlogEditor = () => {
   
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("edit");
 
   useEffect(() => {
     const fetchBlogPost = async () => {
@@ -107,6 +110,11 @@ const BlogEditor = () => {
     }
   };
 
+  const applySuggestion = (suggestion: string) => {
+    setFormData(prev => ({ ...prev, content: suggestion }));
+    setActiveTab("edit");
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -153,18 +161,38 @@ const BlogEditor = () => {
                 />
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="content">Content *</Label>
-                <Textarea
-                  id="content"
-                  name="content"
-                  value={formData.content}
-                  onChange={handleChange}
-                  required
-                  placeholder="Write your blog post content here"
-                  className="min-h-[300px]"
-                />
-              </div>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+                <TabsList className="grid grid-cols-2">
+                  <TabsTrigger value="edit">Edit Content</TabsTrigger>
+                  <TabsTrigger value="ai">
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    AI Assistance
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="edit" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="content">Content *</Label>
+                    <Textarea
+                      id="content"
+                      name="content"
+                      value={formData.content}
+                      onChange={handleChange}
+                      required
+                      placeholder="Write your blog post content here"
+                      className="min-h-[300px]"
+                    />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="ai" className="space-y-4">
+                  <AIContentSuggestions 
+                    title={formData.title}
+                    content={formData.content}
+                    onApplySuggestion={applySuggestion}
+                  />
+                </TabsContent>
+              </Tabs>
               
               <div className="space-y-2">
                 <Label htmlFor="image_url">Image URL</Label>
