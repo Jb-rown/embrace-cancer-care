@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { RealtimeChannel } from "@supabase/supabase-js";
@@ -64,11 +65,15 @@ export const createSubscription = (
 ): RealtimeChannel => {
   const channel = supabase
     .channel(`public:${table}`)
-    .on('postgres_changes', { 
-      event: event, 
-      schema: 'public', 
-      table: table 
-    }, callback)
+    .on(
+      'postgres_changes', 
+      { 
+        event: event, 
+        schema: 'public', 
+        table: table 
+      }, 
+      callback
+    )
     .subscribe();
   
   return channel;
